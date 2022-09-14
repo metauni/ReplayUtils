@@ -1,0 +1,4 @@
+std = "roblox"
+
+[config]
+undefined_variable = { ignore_pattern = "(^_|rbx|Array|Set|Dictionary)" }

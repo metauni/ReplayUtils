@@ -1,0 +1,13 @@
+/*.rbxl
+/*.rbxlx
+/*.rbxm
+/*.rbxmx
+
+/*.rbxlx.lock
+/*.rbxl.lock
+
+# Wally
+Packages
+ServerPackages
+DevPackages
+wally.lock

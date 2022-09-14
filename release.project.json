@@ -1,0 +1,15 @@
+{
+  "name": "replay",
+  "tree": {
+    "$path": "src",
+
+    "Packages": {
+      "$path": "Packages"
+    },
+
+    "version": {
+      "$path": "version.txt"
+
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "replay",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "replay": {
+        "$path": "src",
+
+        "Packages": {
+          "$path": "Packages"
+        }
+      }
+    }
+
+  }
+}
