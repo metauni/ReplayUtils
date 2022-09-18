@@ -42,24 +42,6 @@ function VRCharacterRecorder:Start(startTime)
 		
 		table.insert(self.Timeline, {now, {self.Origin:Inverse() * HeadCFrame, self.Origin:Inverse() * LeftHandCFrame, self.Origin:Inverse() * RightHandCFrame}})
 	end)
-	
-	self.ChalkTimeline = {}
-	
-	self.Chalk = self.Player.Backpack:FindFirstChild("MetaChalk") or self.Player.Character:FindFirstChild("MetaChalk")
-	
-	if self.Chalk then
-		
-		table.insert(self.ChalkTimeline, {0, self.Chalk.Parent == self.Player.Character})
-		
-		self.ChalkConnection = self.Chalk.AncestryChanged:Connect(function()
-
-			table.insert(self.ChalkTimeline, {os.clock() - self.StartTime, self.Chalk.Parent == self.Player.Character})
-		end)
-		
-	else
-		
-		warn("[Replay] MetaChalk not found")
-	end
 end
 
 function VRCharacterRecorder:Stop()
@@ -68,11 +50,6 @@ function VRCharacterRecorder:Stop()
 		self.CharacterConnection:Disconnect()
 		self.CharacterConnection = nil
 	end
-
-	if self.ChalkConnection then
-		self.ChalkConnection:Disconnect()
-		self.ChalkConnection = nil
-	end
 end
 
 function VRCharacterRecorder:CreateReplay(replayArgs)
@@ -80,18 +57,20 @@ function VRCharacterRecorder:CreateReplay(replayArgs)
 	return VRCharacterReplay.new({
 		
 		Timeline = self.Timeline,
-		ChalkTimeline = self.ChalkTimeline,
 		Origin = self.Origin,
-		Chalk = self.Chalk:Clone(),
-
+		
 		Character = replayArgs.Character,
 	})
 end
 
-function VRCharacterRecorder:Store(dataStore: DataStore, key: string)
+function VRCharacterRecorder:Serialise()
 	
-	return persist.Store(self, dataStore, key)
-end
+	local metadata = {
 
+		CharacterId = self.CharacterId,
+	}
+
+	local data = self.Timeline
+end
 
 return VRCharacterRecorder

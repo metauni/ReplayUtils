@@ -6,3 +6,4 @@ realm = "shared"
 
 [dependencies]
 t = "osyrisrblx/t@3.0.0"
+GoodSignal = "stravant/goodsignal@0.2.1"

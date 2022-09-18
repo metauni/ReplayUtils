@@ -13,6 +13,7 @@ EventRecorder.__index = EventRecorder
 local check = t.strictInterface({
 
 	Signal = t.union(t.typeof("RBXScriptSignal"), t.interface({ Connect = t.callback })),
+	ProcessArgs = t.optional(t.callback),
 })
 
 function EventRecorder.new(args)
@@ -32,25 +33,28 @@ function EventRecorder:Start(startTime)
 		
 		local now = os.clock() - self.StartTime
 
-		local args = {...}
-
-		for i=1, #args do
-
-			if i == 1 then
+		local processedArgs do
 			
-				if typeof(args[1]) == "Instance" and args[1]:IsA("Player") then
-					
-					args[1] = tostring(args[1].UserId)
-				end
-			end
-			
-			if not dataSerialiser.CanSerialise(args[i]) then
+			if self.ProcessArgs then
 				
-				warn("[Replay] EventRecorder will not be able to serialise args["..i.."] = "..tostring(args[i])) 
+				processedArgs = table.pack(self.ProcessArgs(...))
+
+			else
+
+				processedArgs = {...}
+
+			end
+		end
+
+		for i=1, #processedArgs do
+
+			if not dataSerialiser.CanSerialise(processedArgs[i]) then
+				
+				warn("[Replay] EventRecorder will not be able to serialise args["..i.."] = "..tostring(processedArgs[i])) 
 			end
 		end
 		
-		table.insert(self.Timeline, {now, args})
+		table.insert(self.Timeline, {now, processedArgs})
 	end)
 end
 

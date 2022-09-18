@@ -40,12 +40,7 @@ local checkCharacter = t.instanceOf("Model", {
 local check = t.strictInterface({
 
 	Timeline = t.table,
-	ChalkTimeline = t.table,
-	SoundTimeline = t.optional(t.table),
-
 	Origin = t.CFrame,
-	Chalk = t.instanceOf("Tool"),
-
 	Character = checkCharacter,
 })
 
@@ -57,8 +52,6 @@ function VRCharacterReplay.new(args)
 end
 
 function VRCharacterReplay:Init()
-
-	-- Character
 
 	for _, child in ipairs(self.Character:GetChildren()) do
 			
@@ -210,7 +203,7 @@ function VRCharacterReplay:Stop()
 	end
 end
 
-function VRCharacterReplay.Restore(dataStore: DataStore, key: string, replayArgs)
+function VRCharacterReplay.Restore(metadata, data, replayArgs)
 
 	local restoredArgs = persist.Restore(dataStore, key)
 
@@ -233,7 +226,6 @@ function VRCharacterReplay.Restore(dataStore: DataStore, key: string, replayArgs
 
 	return VRCharacterReplay.new({
 
-		ChalkTimeline = restoredArgs.ChalkTimeline,
 		Timeline = restoredArgs.Timeline,
 		
 		Character = clone,

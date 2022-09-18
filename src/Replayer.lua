@@ -10,14 +10,22 @@ local persist = require(script.Parent.persist)
 local Replayer = {}
 Replayer.__index = Replayer
 
-local check = t.array(t.interface({
+local checkReplay = t.interface({
 
 	Init = t.optional(t.callback),
 	PlayUpTo = t.callback,
 	Stop = t.optional(t.callback),
-}))
+})
 
-function Replayer.new(replays)
+local check = t.strictInterface({
+
+	Init = t.optional(t.callback),
+	Replays = t.array(checkReplay),
+})
+
+
+
+function Replayer.new(args)
 
 	assert(check(replays))
 
@@ -28,6 +36,11 @@ function Replayer.new(replays)
 end
 
 function Replayer:Play()
+
+	if self.Init then
+		
+		self.Init()
+	end
 
 	self.Playhead = 0
 	self.Paused = false
