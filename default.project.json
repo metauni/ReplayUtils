@@ -1,5 +1,5 @@
 {
-  "name": "replayutils",
+  "name": "ReplayUtils",
   "tree": {
     "$path": "Packages",
     "$className": "ModuleScript",
@@ -9,9 +9,7 @@
     },
 
     "lib": {
-      "$path": "src"
-
+      "$path": "lib"
     }
-
   }
 }

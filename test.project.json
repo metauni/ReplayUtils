@@ -1,5 +1,5 @@
 {
-  "name": "replayutils",
+  "name": "ReplayUtils",
   "tree": {
     "$className": "DataModel",
 
@@ -14,7 +14,7 @@
         },
 
         "lib": {
-          "$path": "src"
+          "$path": "lib"
 
         }
 
