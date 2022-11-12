@@ -17,3 +17,9 @@ Serve this to ReplicatedStorage with
 ```bash
 rojo serve test.project.json
 ```
+
+or build with
+
+```bash
+rojo build -o "chunker.rbxm"
+```
