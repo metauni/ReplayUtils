@@ -1,39 +1,62 @@
 -- Services
-local replay = script.Parent.Parent
-local metaboard = game:GetService("ServerScriptService").metaboard
+local Replay = script.Parent.Parent
 
 -- Imports
-local t = require(replay.Packages.t)
-
--- Helper functions
-local persist = require(script.Parent.persist)
+local t = require(Replay.Parent.t)
 
 local BoardReplay = {}
 BoardReplay.__index = BoardReplay
 
-local check = t.strictInterface({
+export type ReplayArgs = {
+
+	Board: any,
+	Origin: CFrame,
+}
+
+local checkReplayArgs = t.strictInterface({
 
 	Board = t.any,
-	InitFigures = t.table,
-	InitNextFigureZIndex = t.number,
-	Timeline = t.table,
+	Origin = t.CFrame,
 })
 
-function BoardReplay.new(args)
+function BoardReplay.new(record: {Timeline: {any}}, replayArgs: ReplayArgs)
 
-	assert(check(args))
+	assert(checkReplayArgs(replayArgs))
 
-	return setmetatable(args, BoardReplay)
+	local tokenToAuthorId = {}
+
+	for authorId, token in record.AuthorIdTokens do
+
+		if tokenToAuthorId[token] then
+			
+			error("[BoardReplay] Non-distinct authorId tokens")
+		end
+		
+		tokenToAuthorId[token] = authorId
+	end
+
+	local tokenToRemoteName = {}
+
+	for remoteName, token in record.RemoteNameTokens do
+
+		if tokenToRemoteName[token] then
+			
+			error("[BoardReplay] Non-distinct remote name tokens")
+		end
+		
+		tokenToRemoteName[token] = remoteName
+	end
+
+	return setmetatable({
+		Record = record,
+		__tokenToAuthorId = tokenToAuthorId,
+		__tokenToRemoteName = tokenToRemoteName,
+		Board = replayArgs.Board,
+		Origin = replayArgs.Origin,
+	}, BoardReplay)
 end
 
 function BoardReplay:Init()
-
-	for watcher in pairs(self.Board.Watchers) do
-		self.Board.Remotes.SetData:FireClient(watcher, self.InitFigures, {}, {}, self.InitNextFigureZIndex, nil, nil)
-	end
-
-	self.Board:LoadData(self.InitFigures, {}, {}, self.InitNextFigureZIndex, nil, nil)
-	self.Board:DataChanged()
 
 	self.TimelineIndex = 1
 	self.Finished = false
@@ -41,19 +64,45 @@ end
 
 function BoardReplay:PlayUpTo(playhead: number)
 
-	while self.TimelineIndex <= #self.Timeline do
+	while self.TimelineIndex <= #self.Record.Timeline do
 
-		local event = self.Timeline[self.TimelineIndex]
+		local event = self.Record.Timeline[self.TimelineIndex]
 
 		if event[1] <= playhead then
 
-			local timeStamp, remoteName, args = unpack(event)
+			local remoteName = self.__tokenToRemoteName[event[2]]
+			local authorId = self.__tokenToAuthorId[event[3]]
+			local args = {}
 
-			for watcher in pairs(self.Board.Watchers) do
-				self.Board.Remotes[remoteName]:FireClient(watcher, unpack(args))
+			if remoteName == "InitDrawingTask" then
+				
+				local taskId, taskType, width, r, g, b, x, y = unpack(event, 4)
+
+				local drawingTask = {
+					Id = taskId,
+					Type = taskType,
+					Curve = {
+						Type = "Curve",
+						Points = nil,
+						Width = width,
+						Color = Color3.new(r,g,b)
+					},
+					Verified = true,
+				}
+
+				args = {drawingTask, Vector2.new(x, y)}
+			elseif remoteName == "UpdateDrawingTask" then
+
+				local x, y = unpack(event, 4)
+
+				args = {Vector2.new(x, y)}
 			end
 
-			self.Board["Process"..remoteName](self.Board, unpack(args))
+			for watcher in pairs(self.Board.Watchers) do
+				self.Board.Remotes[remoteName]:FireClient(watcher, "replay-"..authorId, unpack(args))
+			end
+
+			self.Board["Process"..remoteName](self.Board, "replay-"..authorId, unpack(args))
 
 			self.TimelineIndex += 1
 			continue
@@ -62,24 +111,10 @@ function BoardReplay:PlayUpTo(playhead: number)
 		break
 	end
 
-	if self.TimelineIndex > #self.Timeline then
+	if self.TimelineIndex > #self.Record.Timeline then
 
 		self.Finished = true
 	end
-end
-
-function BoardReplay.Restore(dataStore: DataStore, key: string, replayArgs)
-	
-	local restoredArgs = persist.Restore(dataStore, key, replayArgs.Board)
-
-	return BoardReplay.new({
-		
-		InitFigures = restoredArgs.InitFigures,
-		InitNextFigureZIndex = restoredArgs.InitNextFigureZIndex,
-		Timeline = restoredArgs.Timeline,
-
-		Board = replayArgs.Board,
-	})
 end
 
 return BoardReplay

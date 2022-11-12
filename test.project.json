@@ -1,0 +1,25 @@
+{
+  "name": "replayutils",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+
+      "ReplayUtils": {
+        "$path": "Packages",
+        "$className": "ModuleScript",
+
+        "$properties": {
+          "Source": "return require(script.lib)"
+        },
+
+        "lib": {
+          "$path": "src"
+
+        }
+
+      }
+    }
+
+  }
+}

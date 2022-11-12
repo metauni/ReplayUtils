@@ -1,14 +1,21 @@
 {
-  "name": "replay",
+  "name": "replayutils",
   "tree": {
     "$path": "src",
 
-    "Packages": {
-      "$path": "Packages"
-    },
+    "Replay": {
+      "$path": "Packages",
+      "$className": "ModuleScript",
 
-    "version": {
-      "$path": "version.txt"
+
+      "$properties": {
+        "Source": "return require(script.lib)"
+      },
+
+      "lib": {
+        "$path": "lib"
+
+      }
 
     }
   }

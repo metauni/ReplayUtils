@@ -1,14 +1,11 @@
 -- Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local replay = script.Parent
+local Replay = script.Parent
 
 -- Imports
-local t = require(replay.Packages.t)
+local t = require(Replay.Parent.t)
 local NexusVRCharacterModel = require(ReplicatedStorage:WaitForChild("NexusVRCharacterModel"))
-local Character = NexusVRCharacterModel:GetResource("Character")
 local UpdateInputs = NexusVRCharacterModel:GetResource("UpdateInputs")
-local VRCharacterReplay = require(script.VRCharacterReplay)
-local persist = require(script.persist)
 
 local VRCharacterRecorder = {}
 VRCharacterRecorder.__index = VRCharacterRecorder
@@ -17,7 +14,6 @@ local check = t.strictInterface({
 
 	Origin = t.CFrame,
 	Player = t.instanceOf("Player"),
-	CharacterId = t.union(t.string, t.number),
 })
 
 function VRCharacterRecorder.new(args)
@@ -34,13 +30,26 @@ function VRCharacterRecorder:Start(startTime)
 	self.Timeline = {}
 	
 	self.CharacterConnection = UpdateInputs.OnServerEvent:Connect(function(player, HeadCFrame, LeftHandCFrame, RightHandCFrame)
-		if player ~= self.Player then
-			return
-		end
 		
 		local now = os.clock() - self.StartTime
 		
-		table.insert(self.Timeline, {now, {self.Origin:Inverse() * HeadCFrame, self.Origin:Inverse() * LeftHandCFrame, self.Origin:Inverse() * RightHandCFrame}})
+		if player ~= self.Player then
+			return
+		end
+
+		local headRel = self.Origin:Inverse() * HeadCFrame
+		local headRx, headRy, headRz = headRel:ToEulerAnglesXYZ()
+		local leftHandRel = self.Origin:Inverse() * LeftHandCFrame
+		local leftRx, leftRy, leftRz = leftHandRel:ToEulerAnglesXYZ()
+		local rightHandRel = self.Origin:Inverse() * RightHandCFrame
+		local rightRx, rightRy, rightRz = rightHandRel:ToEulerAnglesXYZ()
+		
+		table.insert(self.Timeline, {now,
+			
+			headRel.Position.X,      headRel.Position.Y,      headRel.Position.Z,      headRx, headRy, headRz,
+			leftHandRel.Position.X,  leftHandRel.Position.Y,  leftHandRel.Position.Z,  leftRx, leftRy, leftRz,
+			rightHandRel.Position.X, rightHandRel.Position.Y, rightHandRel.Position.Z, rightRx, rightRy, rightRz,
+		})
 	end)
 end
 
@@ -52,25 +61,24 @@ function VRCharacterRecorder:Stop()
 	end
 end
 
-function VRCharacterRecorder:CreateReplay(replayArgs)
-	
-	return VRCharacterReplay.new({
-		
+function VRCharacterRecorder:FlushTimelineToRecord()
+
+	local record = {
+
 		Timeline = self.Timeline,
-		Origin = self.Origin,
-		
-		Character = replayArgs.Character,
-	})
-end
-
-function VRCharacterRecorder:Serialise()
-	
-	local metadata = {
-
-		CharacterId = self.CharacterId,
 	}
 
-	local data = self.Timeline
+	self.Timeline = {}
+
+	return record
+end
+
+local NUM_LENGTH_EST = 20 -- Average is about 19.26
+local SCAFFOLD = #[[{"Timeline":{}}]]
+
+function VRCharacterRecorder:GetRecordSizeEstimate()
+	-- events * (maxsize * numNums + commas + eventbraces + eventComma)
+	return #self.Timeline * (NUM_LENGTH_EST * 19 + 18 + 2 + 1) + SCAFFOLD
 end
 
 return VRCharacterRecorder

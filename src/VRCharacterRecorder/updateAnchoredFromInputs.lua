@@ -18,7 +18,7 @@ end
 
 --[[
 	This is derived from Character:UpdateFromInputs() in NexusVRCharacterModel.
-	It sets the parts to the target cframes, instead of tweening them there.
+	It tweens or sets the cframes directly, instead of using motors
 --]]
 return function(nexusCharacter, HeadControllerCFrame: CFrame, LeftHandControllerCFrame: CFrame, RightHandControllerCFrame: CFrame, instantly: boolean?)
 
@@ -70,27 +70,4 @@ return function(nexusCharacter, HeadControllerCFrame: CFrame, LeftHandController
 	tweenToCFrame(self.Parts.RightFoot, RightFootCFrame, instantly)
 
 	tweenToCFrame(self.Parts.HumanoidRootPart, TargetHumanoidRootPartCFrame, instantly)
-
-	-- self.Parts.Head.CFrame = HeadCFrame
-
-	-- self.Parts.LowerTorso.CFrame = LowerTorsoCFrame
-	-- self.Parts.UpperTorso.CFrame = UpperTorsoCFrame
-
-	-- self.Parts.LeftUpperArm.CFrame = LeftUpperArmCFrame
-	-- self.Parts.LeftLowerArm.CFrame = LeftLowerArmCFrame
-	-- self.Parts.LeftHand.CFrame = LeftHandCFrame
-
-	-- self.Parts.RightUpperArm.CFrame = RightUpperArmCFrame
-	-- self.Parts.RightLowerArm.CFrame = RightLowerArmCFrame
-	-- self.Parts.RightHand.CFrame = RightHandCFrame
-
-	-- self.Parts.LeftUpperLeg.CFrame = LeftUpperLegCFrame
-	-- self.Parts.LeftLowerLeg.CFrame = LeftLowerLegCFrame
-	-- self.Parts.LeftFoot.CFrame = LeftFootCFrame
-
-	-- self.Parts.RightUpperLeg.CFrame = RightUpperLegCFrame
-	-- self.Parts.RightLowerLeg.CFrame = RightLowerLegCFrame
-	-- self.Parts.RightFoot.CFrame = RightFootCFrame
-
-	-- self.Parts.HumanoidRootPart.CFrame = TargetHumanoidRootPartCFrame
 end

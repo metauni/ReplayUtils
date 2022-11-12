@@ -1,11 +1,8 @@
 -- Services
-local replay = script.Parent
+local Replay = script.Parent
 
 -- Imports
-local t = require(replay.Packages.t)
-local EventReplay = require(script.EventReplay)
-local persist = require(script.persist)
-local dataSerialiser = require(replay.dataSerialiser)
+local t = require(Replay.Parent.t)
 
 local EventRecorder = {}
 EventRecorder.__index = EventRecorder
@@ -28,6 +25,7 @@ function EventRecorder:Start(startTime)
 	-- Start time is passed as argument for consistency between recorders
 	self.StartTime = startTime
 	self.Timeline = {}
+	self._sizeAcc = 0
 	
 	self.Connection = self.Signal:Connect(function(...)
 		
@@ -37,7 +35,7 @@ function EventRecorder:Start(startTime)
 			
 			if self.ProcessArgs then
 				
-				processedArgs = table.pack(self.ProcessArgs(...))
+				processedArgs = {self.ProcessArgs(...)}
 
 			else
 
@@ -46,15 +44,35 @@ function EventRecorder:Start(startTime)
 			end
 		end
 
-		for i=1, #processedArgs do
+		for i, arg in ipairs(processedArgs) do
 
-			if not dataSerialiser.CanSerialise(processedArgs[i]) then
+			if i~= #processedArgs then
 				
-				warn("[Replay] EventRecorder will not be able to serialise args["..i.."] = "..tostring(processedArgs[i])) 
+				-- Comma
+				self._sizeAcc += 1
+			end
+
+			local argType = typeof(arg)
+
+			if argType == "number" then
+				
+				self._sizeAcc += #tostring(arg)
+			elseif argType == "boolean" then
+
+				self._sizeAcc += arg and 4 or 5 -- #"true" == 4, #"false" = 5
+			elseif argType == "string" then
+
+				self._sizeAcc += #arg + 2 -- inc quotes
+			elseif argType == "nil" then
+
+				self._sizeAcc += 4 -- #"null" = 0
+			else
+
+				error(("[Replay] EventRecorder: Processed arg[%d] = %s is not a number | boolean | string | nil"):format(i, tostring(arg))) 
 			end
 		end
 		
-		table.insert(self.Timeline, {now, processedArgs})
+		table.insert(self.Timeline, {now, unpack(processedArgs)})
 	end)
 end
 
@@ -66,18 +84,24 @@ function EventRecorder:Stop()
 	end
 end
 
-function EventRecorder:CreateReplay(replayArgs)
+function EventRecorder:FlushTimelineToRecord()
 	
-	return EventReplay.new({
-
-		Callback = replayArgs.Callback,
+	local record = {
+		
 		Timeline = self.Timeline,
-	})
+	}
+
+	self.Timeline = {}
+	self._sizeAcc = 0
+
+	return record
 end
 
-function EventRecorder:Store(dataStore: DataStore, key: string)
+local SCAFFOLD = #[[{"Timeline":{}}]]
+
+function EventRecorder:GetRecordSizeEstimate()
 	
-	return persist.Store(self, dataStore, key)
+	return SCAFFOLD + self._sizeAcc
 end
 
 
